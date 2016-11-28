@@ -18,7 +18,7 @@ extends 'PEDSnet::Derivation::Config';
 
 sub _build_config_param {
   my( $self, $param_name, $sql_where ) = @_;
-  my $val = $self->_config_file_content->{$param_name};
+  my $val = $self->config_datum($param_name);
   return $val if defined $val;
 
   my @cids = $self->ask_rdb('SELECT concept_id FROM concept WHERE ' . $sql_where);
@@ -82,7 +82,7 @@ has 'bmi_unit_source_value' =>
     lazy => 1, builder => 'build_bmi_unit_source_value' );
 
 sub build_bmi_unit_source_value {
-  shift->_config_file_content->{bmi_unit_source_value} // 'kg/m2';
+  shift->config_datum('bmi_unit_source_value') // 'kg/m2';
 }
 
 
@@ -91,7 +91,7 @@ has 'meas_match_limit_sec' =>
     lazy => 1, builder => 'build_meas_match_limit_sec');
 
 sub build_meas_match_limit_sec {
-  shift->_config_file_content->{meas_match_limit_sec} //
+  shift->config_datum('meas_match_limit_sec') //
   # Default 60 day max window between ht and wt for BMI calculation
   (60 * 24 * 60 * 60);
 }
