@@ -1,0 +1,160 @@
+#!/usr/bin/env perl
+
+use 5.024;
+use strict;
+use warnings;
+
+use DateTime;
+use Math::Random::Secure qw(rand);
+use Path::Tiny;
+use Rose::DateTime::Util qw(parse_date);
+use Text::CSV;
+
+my $id_map = {};
+my $date_map = {};
+my $datetime_map = {};
+
+sub remap_id {
+  my($rec, $key) = @_;
+  my($prefix) = $key =~ /(.+)_id$/;
+  state $id_counter = {};
+  my $orig = $rec->{$key};
+
+  return unless defined $orig;
+  
+  $id_map->{$prefix} //= {};
+  unless (exists $id_map->{$prefix}->{$orig}) {
+    $id_counter->{$prefix} //= 1;
+    $id_map->{$prefix}->{$orig} = $id_counter->{$prefix}++;
+  }
+
+  $rec->{$key} = $id_map->{$prefix}->{$orig};
+  return  ($orig, $rec->{$key}) if wantarray;
+  return $orig;
+  
+}
+
+sub _new_time_offset {
+  my $person_id = shift;
+  my $offset = rand(366) - 183;
+  $offset +=1 if $offset < 1;
+  my $days = int($offset);
+  my $min_frac =  ($offset - $days) * 60 * 24;
+  my $whole_min = int($min_frac);
+  $date_map->{$person_id} = DateTime::Duration->new( days => $days );
+  $datetime_map->{$person_id} = DateTime::Duration->
+    new( days => $days, minutes => $whole_min,
+	 seconds => int( ($min_frac - $whole_min) * 60 ) );
+}
+
+sub remap_date {
+  my($rec, $key, $person_id) = @_;
+  my($pid) = $person_id // $rec->{person_id};
+  my $orig = $rec->{$key};
+  my $new;
+  
+  return unless defined $pid and defined $orig;
+  
+  unless (exists $date_map->{$pid}) {
+    _new_time_offset($pid);
+  }
+
+  warn "Date map failure for $pid: $date_map->{$pid}" unless $date_map->{$pid};
+  $new = parse_date($orig) + $date_map->{$pid};
+  $new =~ s/T.*//;
+  $rec->{$key} = $new;
+  return  ($orig, $new) if wantarray;
+  return $orig;
+  
+}
+
+sub remap_datetime {
+  my($rec, $key, $person_id) = @_;
+  my($pid) = $person_id // $rec->{person_id};
+  my $orig = $rec->{$key};
+  my $new;
+  
+  return unless defined $pid and defined $orig;
+  
+  unless (exists $datetime_map->{$pid}) {
+    _new_time_offset($pid);
+  }
+
+  $new = parse_date($orig) + $datetime_map->{$pid};
+  $rec->{$key} = $new->iso8601;
+  return  ($orig, $rec->{$key}) if wantarray;
+  return $orig;
+  
+}
+
+
+sub deidentify_csv {
+  my($in, $out, $opts) = @_;
+  $opts //= { };
+  my $incsv = Text::CSV->new({ binary => 1 });
+  my $keep = $opts->{preserve_attributes} // {};
+  my($infh, $outfh, @cols, $outcsv);
+
+  if (ref $in) { $infh = $in }
+  else {
+    $infh = path($in)->openr;
+  }
+  if (ref $out) { $outfh = $out }
+  else {
+    $outfh = path($out)->openw;
+  }
+
+  @cols = $incsv->header($infh);
+  $outcsv = Text::CSV->new({ eol => "\n", sep => $incsv->sep, binary => 1 });
+  $outcsv->print($outfh, \@cols);
+  
+  while (my $r = $incsv->getline_hr($infh)) {
+    foreach my $c (@cols) {
+      next if $keep->{$c};
+
+      for ($c) {
+	remap_id($r,$c) if /(?<!_concept)_id$/;
+	remap_date($r,$c) if /_date$/;
+	remap_datetime($r,$c) if /_time$/;
+	$r->{$c} = '' if /_source_value$/;
+      }
+    }
+
+    $outcsv->print($outfh, [ @$r{@cols} ]);
+  }
+  $infh->close unless ref $in;
+  $outfh->close unless ref $out;
+  return !($incsv->error_diag || $outcsv->error_diag)
+}
+
+unless (caller) {
+  require Getopt::Long;
+  my(@preserve, $auto_names);
+  Getopt::Long::GetOptions( 'preserve=s@' => \@preserve,
+			    'auto_names:s' => \$auto_names );
+  @preserve = map { split /,/ } @preserve;
+  $auto_names = '_deid' if length $auto_names < 2;
+  my $opts;
+  
+  $opts = { preserve_attributes =>
+	    { map { $_ => 1 }@preserve } } if @preserve;
+  if (@ARGV) {
+    while (@ARGV) {
+      my $f = shift @ARGV;
+      my $deid;
+      
+      if ($auto_names) {
+	($deid) = $f =~ s/(\.[^.]*)$/_deid$1/r;
+	$deid .= '_deid' if $f eq $deid;
+      }
+      else {
+	$deid = shift @ARGV || 'deidentified';
+      }
+      print "Converting $f to $deid\n";
+      deidentify_csv($f, $deid, $opts);
+    }
+  }
+  else {
+    deidentify_csv(\*STDIN, \*STDOUT, $opts);
+  }
+}
