@@ -90,6 +90,7 @@ my $output = [
 	       measurement_concept_id => 3038553,
 	       measurement_type_concept_id => 45754907,
 	       unit_concept_id => 9531,
+	       unit_source_value => 'kg/m2',
 	       measurement_date => '2015-09-05',
 	       measurement_time => '2015-09-05T14:10:14',
 	       value_as_number => 25,
