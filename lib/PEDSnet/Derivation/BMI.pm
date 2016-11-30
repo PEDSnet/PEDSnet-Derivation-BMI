@@ -231,7 +231,7 @@ sub DEMOLISH { shift->flush_output }
 
 =cut
 
-sub process_person_list {
+sub process_person_chunk {
   my( $self, $person_list ) = @_;
   my $get_qry = $self->get_meas_for_person_qry;
   my $src = $self->src_backend;
@@ -251,6 +251,51 @@ sub process_person_list {
   }
 
   $saved;
+}
+
+=item generate_bmis()
+
+=cut
+
+sub generate_bmis {
+  my $self = shift;
+  my $src = $self->src_backend;
+  my $config = $self->config;
+  my $saved = 0;
+  my $chunk_size =  $config->person_chunk_size;
+  my($pt_qry, $chunk);
+
+  # CSV backend can't handle self-joins or subselects,
+  # so we limit preprocessing
+  if (ref($src) =~ /::CSV/) { 
+    $pt_qry =
+      $src->build_query('select distinct person_id from ' .
+		      $config->input_measurement_table .
+		      ' where measurement_concept_id = ' .
+		      $config->ht_measurement_concept_id );
+  }
+  else {
+    $pt_qry =
+      $src->build_query('select distinct m1.person_id from ' .
+		      $config->input_measurement_table .
+		      ' m1 inner join ' .
+		      $config->input_measurement_table .
+		      ' m2 on m1.person_id = m2.person_id ' .
+		      ' where m1.measurement_concept_id = ' .
+		      $config->ht_measurement_concept_id .
+		      ' and m2.measurement_concept_id = ' .
+		      $config->wt_measurement_concept_id );
+  }
+  return unless $pt_qry->execute;
+
+  while ($chunk = $src->fetch_chunk($pt_qry, $chunk_size) and @$chunk) {
+    $saved += $self->process_person_chunk($chunk);
+  }
+
+  $self->flush_output;
+
+  $saved;
+  
 }
 
 1;
