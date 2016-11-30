@@ -65,10 +65,12 @@ foreach my $c ( [ ht_measurement_concept_id => 3023540 ],
 		[ wt_measurement_concept_id => 3013762 ],
 		[ bmi_measurement_concept_id => 3038553 ],
 		[ bmi_measurement_type_concept_id => 45754907 ],
+		[ bmi_unit_concept_id => 9531 ],
 		[ bmi_unit_source_value => 'kg/m2' ],
 		[ input_measurement_table => 'measurement' ],
 		[ output_measurement_table => 'measurement' ],
 		[ output_chunk_size => 1000 ],
+		[ person_chunk_size => 1000 ],
 	      ) {
   my $meth = $c->[0];
   cmp_ok($config->$meth,

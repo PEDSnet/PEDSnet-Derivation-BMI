@@ -121,6 +121,14 @@ sub build_output_chunk_size {
   shift->_config_file_content->{output_chunk_size} // 1000;
 }
 
+has 'person_chunk_size' =>
+  ( isa => Int, is => 'ro', required => 1,
+    builder => 'build_person_chunk_size' );
+
+sub build_person_chunk_size {
+  shift->_config_file_content->{person_chunk_size} // 1000;
+}
+
 
 
 1;
