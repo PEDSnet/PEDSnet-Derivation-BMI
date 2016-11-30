@@ -43,14 +43,6 @@ eq_or_diff($list,
 	   [ grep { $_->{person_id} == 261461 } @$test_list ],
 	   'Result is correct');
 
-my $person_list =
-  do {
-    my $lq = $backend->build_query('select distinct person_id from ' .
-				   $config->input_measurement_table);
-    $lq->execute;
-    $backend->fetch_chunk($lq);
-  };
-
 
 eval {
   # Suppress error message if table doesn't exist
@@ -62,16 +54,18 @@ eval {
 $backend->clone_table($config->input_measurement_table,
 		      $config->output_measurement_table);
 
-is($handle->process_person_list($person_list), 26, 'Process person list');
+my $person_list = [ map { { person_id => $_} } 1..3 ];
+my @expected =
+  path('person_list_output_expected')->absolute($FindBin::Bin)->lines;
+
+is($handle->process_person_chunk($person_list), @expected - 1, 'Process person list');
+
 $handle->flush_output;
 
 my $outp = path($config->output_measurement_table)->
 	   absolute($FindBin::Bin);
 $outp->remove
-  if eq_or_diff($outp->slurp,
-		path('person_list_output_expected')->
-		absolute($FindBin::Bin)->slurp,
-		'Output is correct');
+  if eq_or_diff([ $outp->lines ], \@expected, 'Output is correct');
 
 done_testing;
 
