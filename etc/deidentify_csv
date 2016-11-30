@@ -110,7 +110,7 @@ sub deidentify_csv {
   
   while (my $r = $incsv->getline_hr($infh)) {
     foreach my $c (@cols) {
-      next if $keep->{$c};
+      next if $keep->{$c} or not $r->{$c};
 
       for ($c) {
 	remap_id($r,$c) if /(?<!_concept)_id$/;
