@@ -110,6 +110,7 @@ sub bmi_meas_for_person {
      $conf->bmi_measurement_type_concept_id,
      $conf->bmi_unit_concept_id,
      $conf->bmi_unit_source_value);
+#  my $clone = $conf->clone_bmi_meas_except_attr;
   my @hts = grep { $_->{measurement_concept_id} == $ht_cid }
             $measurements->@*;
   my @wts = grep { $_->{measurement_concept_id} == $wt_cid }
@@ -127,6 +128,7 @@ sub bmi_meas_for_person {
   foreach my $wt (@wts) {
     my $ht = $self->find_closest_meas($ht_ts, $wt);
     next unless $ht;
+    my $bmi_rec;
 
     my $bmi_val = $self->compute_bmi($ht->{value_as_number},
 				     $wt->{value_as_number});
@@ -135,25 +137,40 @@ sub bmi_meas_for_person {
 		   $bmi_val, $wt->{measurement_id}, $wt->{measurement_time})
       if $verbose >= 3;
     
-    push @bmis,
-      {
-       person_id => $wt->{person_id},
-       measurement_concept_id => $bmi_cid,
-       measurement_date => $wt->{measurement_date},
-       measurement_time => $wt->{measurement_time},
-       measurement_result_date => $wt->{measurement_result_date},
-       measurement_result_time => $wt->{measurement_result_time},
-       measurement_type_concept_id => $bmi_type_cid,
-       value_as_number => $bmi_val,
-       unit_concept_id => $bmi_unit_cid,
-       unit_source_value => $bmi_unit_sv,
-       provider_id => $wt->{provider_id},
-       visit_occurrence_id => $wt->{visit_occurrence_id},
-       measurement_source_value => "PEDSnet BMI computation v$VERSION",
-       value_source_value => "wt: $wt->{measurement_id}, ht: $ht->{measurement_id}",
-      };
-    # DCC extension
-    $bmis[-1]->{site} = $wt->{site} if exists $wt->{site};
+    # if (@$clone) { 
+    #   $bmi_rec = { %$wt };
+    #   delete $bmi_rec->{$_} for @$clone;
+    #   $bmi_rec->{measurement_concept_id} = $bmi_cid;
+    #   $bmi_rec->{value_as_number} = $bmi_val;
+    #   $bmi_rec->{unit_concept_id} = $bmi_unit_cid;
+    #   $bmi_rec->{unit_source_value} = $bmi_unit_sv;
+    #   $bmi_rec->{measurement_source_value} = "PEDSnet BMI computation v$VERSION";
+    #   $bmi_rec->{value_source_value} =
+    # 	"wt: $wt->{measurement_id}, ht: $ht->{measurement_id}";
+    # }
+    # else {
+      $bmi_rec = 
+	{
+	 person_id => $wt->{person_id},
+	 measurement_concept_id => $bmi_cid,
+	 measurement_date => $wt->{measurement_date},
+	 measurement_time => $wt->{measurement_time},
+	 measurement_type_concept_id => $bmi_type_cid,
+	 value_as_number => $bmi_val,
+	 unit_concept_id => $bmi_unit_cid,
+	 unit_source_value => $bmi_unit_sv,
+	 measurement_source_value => "PEDSnet BMI computation v$VERSION",
+	 value_source_value => "wt: $wt->{measurement_id}, ht: $ht->{measurement_id}",
+	};
+      # Optional keys - should be there but may be skipped if input
+      # was not read from measurement tabl    
+      foreach my $k (qw/ measurement_result_date measurement_result_time
+                         provider_id visit_occurrence_id site /) {
+        $bmi_rec->{$k} = $wt->{$k} if exists $wt->{$k};
+      }
+
+    # }
+    push @bmis, $bmi_rec;
   }
   
   \@bmis;
