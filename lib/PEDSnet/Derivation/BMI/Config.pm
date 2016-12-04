@@ -98,7 +98,7 @@ sub build_meas_match_limit_sec {
 }
 
 has 'input_measurement_table' =>
-  ( isa => Str, is => 'ro', required => 1,
+  ( isa => Str, is => 'ro', required => 1, lazy => 1,
     builder => 'build_input_measurement_table' );
 
 sub build_input_measurement_table {
@@ -107,7 +107,7 @@ sub build_input_measurement_table {
 
 
 has 'output_measurement_table' =>
-  ( isa => Str, is => 'ro', required => 1,
+  ( isa => Str, is => 'ro', required => 1, lazy => 1,
     builder => 'build_output_measurement_table' );
 
 sub build_output_measurement_table {
@@ -115,7 +115,7 @@ sub build_output_measurement_table {
 }
 
 has 'output_chunk_size' =>
-  ( isa => Int, is => 'ro', required => 1,
+  ( isa => Int, is => 'ro', required => 1, lazy => 1,
     builder => 'build_output_chunk_size' );
 
 sub build_output_chunk_size {
@@ -123,7 +123,7 @@ sub build_output_chunk_size {
 }
 
 has 'person_chunk_size' =>
-  ( isa => Int, is => 'ro', required => 1,
+  ( isa => Int, is => 'ro', required => 1, lazy => 1,
     builder => 'build_person_chunk_size' );
 
 sub build_person_chunk_size {
