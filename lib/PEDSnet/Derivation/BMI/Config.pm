@@ -21,6 +21,7 @@ sub _build_config_param {
   my $val = $self->config_datum($param_name);
   return $val if defined $val;
 
+  return unless defined $sql_where;
   my @cids = $self->ask_rdb('SELECT concept_id FROM concept WHERE ' . $sql_where);
   return $cids[0]->{concept_id};
 }
@@ -82,7 +83,7 @@ has 'bmi_unit_source_value' =>
     lazy => 1, builder => 'build_bmi_unit_source_value' );
 
 sub build_bmi_unit_source_value {
-  shift->config_datum('bmi_unit_source_value') // 'kg/m2';
+  shift->_build_config_param('bmi_unit_source_value') // 'kg/m2';
 }
 
 
@@ -91,7 +92,7 @@ has 'meas_match_limit_sec' =>
     lazy => 1, builder => 'build_meas_match_limit_sec');
 
 sub build_meas_match_limit_sec {
-  shift->config_datum('meas_match_limit_sec') //
+  shift->_build_config_param('meas_match_limit_sec') //
   # Default 60 day max window between ht and wt for BMI calculation
   (60 * 24 * 60 * 60);
 }
@@ -101,7 +102,7 @@ has 'input_measurement_table' =>
     builder => 'build_input_measurement_table' );
 
 sub build_input_measurement_table {
-  shift->_config_file_content->{input_measurement_table} // 'measurement'
+  shift->_build_config_param('input_measurement_table') // 'measurement'
 }
 
 
@@ -110,7 +111,7 @@ has 'output_measurement_table' =>
     builder => 'build_output_measurement_table' );
 
 sub build_output_measurement_table {
-  shift->_config_file_content->{output_measurement_table} // 'measurement'
+  shift->_build_config_param('output_measurement_table') // 'measurement'
 }
 
 has 'output_chunk_size' =>
@@ -118,7 +119,7 @@ has 'output_chunk_size' =>
     builder => 'build_output_chunk_size' );
 
 sub build_output_chunk_size {
-  shift->_config_file_content->{output_chunk_size} // 1000;
+  shift->_build_config_param('output_chunk_size') // 1000;
 }
 
 has 'person_chunk_size' =>
@@ -126,7 +127,7 @@ has 'person_chunk_size' =>
     builder => 'build_person_chunk_size' );
 
 sub build_person_chunk_size {
-  shift->_config_file_content->{person_chunk_size} // 1000;
+  shift->_build_config_param('person_chunk_size') // 1000;
 }
 
 
