@@ -311,7 +311,9 @@ sub generate_bmis {
   return unless $pt_qry->execute;
 
   while ($chunk = $src->fetch_chunk($pt_qry, $chunk_size) and @$chunk) {
-    $saved += $self->process_person_chunk($chunk);
+    my $ct = $self->process_person_chunk($chunk);
+    $saved += $ct;
+    $self->remark("Completed $ct persons (total $saved)") if $self->verbose;
   }
 
   $self->flush_output;
