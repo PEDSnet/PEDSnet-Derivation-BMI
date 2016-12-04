@@ -12,7 +12,7 @@ our($VERSION) = '0.01';
 our($REVISION) = '$Revision$' =~ /: (\d+)/ ? $1 : 0;
 
 use Moo 2;
-use Types::Standard qw/ Str Int HashRef /;
+use Types::Standard qw/ Bool Str Int HashRef ArrayRef /;
 
 extends 'PEDSnet::Derivation::Config';
 
@@ -130,6 +130,25 @@ sub build_person_chunk_size {
   shift->_build_config_param('person_chunk_size') // 1000;
 }
 
+has 'clone_bmi_measurements' =>
+  ( isa => Bool, is => 'ro', required => 0, lazy => 1,
+    builder => 'build_clone_bmi_measurements' );
+
+sub build_clone_bmi_measurements {
+  shift->_build_config_param('clone_bmi_measurements') // 0;
+}
+
+has 'clone_attributes_except' =>
+  ( isa => ArrayRef, is => 'ro', required => 0, lazy => 1,
+    builder => 'build_clone_attributes_except' );
+
+sub build_clone_attributes_except {
+  shift->_build_config_param('clone_attributes_except') //
+    [ qw(measurement_id measurement_concept_id measurement_type_concept_id
+         value_as_number value_as_concept_id unit_concept_id range_low range_high
+         measurement_source_value measurement_source_concept_id unit_source_value
+         value_source_value siteid) ];
+}
 
 
 1;

@@ -103,14 +103,15 @@ sub find_closest_meas {
 sub bmi_meas_for_person {
   my( $self, $measurements ) = @_;
   my $conf = $self->config;
-  my($ht_cid, $wt_cid, $bmi_cid, $bmi_type_cid, $bmi_unit_cid, $bmi_unit_sv) =
+  my($ht_cid, $wt_cid, $bmi_cid, $bmi_type_cid, $bmi_unit_cid,
+     $bmi_unit_sv, $clone) =
     ($conf->ht_measurement_concept_id,
      $conf->wt_measurement_concept_id,
      $conf->bmi_measurement_concept_id,
      $conf->bmi_measurement_type_concept_id,
      $conf->bmi_unit_concept_id,
-     $conf->bmi_unit_source_value);
-#  my $clone = $conf->clone_bmi_meas_except_attr;
+     $conf->bmi_unit_source_value,
+     $conf->clone_bmi_measurements);
   my @hts = grep { $_->{measurement_concept_id} == $ht_cid }
             $measurements->@*;
   my @wts = grep { $_->{measurement_concept_id} == $wt_cid }
@@ -123,8 +124,11 @@ sub bmi_meas_for_person {
 		$wts[0]->{person_id}) if $verbose >= 2;
   
   my $ht_ts = $self->create_time_series( \@hts );
-  my @bmis;
+  my(@bmis, @clone_except);
 
+
+  @clone_except = $conf->clone_attributes_except->@* if $clone;
+  
   foreach my $wt (@wts) {
     my $ht = $self->find_closest_meas($ht_ts, $wt);
     next unless $ht;
@@ -137,18 +141,19 @@ sub bmi_meas_for_person {
 		   $bmi_val, $wt->{measurement_id}, $wt->{measurement_time})
       if $verbose >= 3;
     
-    # if (@$clone) { 
-    #   $bmi_rec = { %$wt };
-    #   delete $bmi_rec->{$_} for @$clone;
-    #   $bmi_rec->{measurement_concept_id} = $bmi_cid;
-    #   $bmi_rec->{value_as_number} = $bmi_val;
-    #   $bmi_rec->{unit_concept_id} = $bmi_unit_cid;
-    #   $bmi_rec->{unit_source_value} = $bmi_unit_sv;
-    #   $bmi_rec->{measurement_source_value} = "PEDSnet BMI computation v$VERSION";
-    #   $bmi_rec->{value_source_value} =
-    # 	"wt: $wt->{measurement_id}, ht: $ht->{measurement_id}";
-    # }
-    # else {
+    if ($clone) { 
+      $bmi_rec = { %$wt };
+      delete $bmi_rec->{$_} for @clone_except;
+      $bmi_rec->{measurement_concept_id} = $bmi_cid;
+      $bmi_rec->{measurement_type_concept_id} = $bmi_type_cid;
+      $bmi_rec->{value_as_number} = $bmi_val;
+      $bmi_rec->{unit_concept_id} = $bmi_unit_cid;
+      $bmi_rec->{unit_source_value} = $bmi_unit_sv;
+      $bmi_rec->{measurement_source_value} = "PEDSnet BMI computation v$VERSION";
+      $bmi_rec->{value_source_value} =
+    	"wt: $wt->{measurement_id}, ht: $ht->{measurement_id}";
+    }
+    else {
       $bmi_rec = 
 	{
 	 person_id => $wt->{person_id},
@@ -169,7 +174,7 @@ sub bmi_meas_for_person {
         $bmi_rec->{$k} = $wt->{$k} if exists $wt->{$k};
       }
 
-    # }
+    }
     push @bmis, $bmi_rec;
   }
   

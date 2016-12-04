@@ -69,6 +69,7 @@ foreach my $c ( [ ht_measurement_concept_id => 3023540 ],
 		[ bmi_unit_source_value => 'kg/m2' ],
 		[ input_measurement_table => 'measurement' ],
 		[ output_measurement_table => 'measurement' ],
+		[ clone_bmi_measurements => 0 ],
 		[ output_chunk_size => 1000 ],
 		[ person_chunk_size => 1000 ],
 	      ) {
@@ -77,6 +78,11 @@ foreach my $c ( [ ht_measurement_concept_id => 3023540 ],
 	 ($c->[1] =~ /^\d+$/ ? '==' : 'eq'),
 	 $c->[1], "Value for $c->[0]");
 }
+
+is_deeply($config->clone_attributes_except,
+	  [ qw/ measurement_id special_attr measurement_dt / ],
+	  'Value for clone_attributes_except');
+
 
 if ($has_sqlite) {
   $config = PEDSnet::Derivation::BMI::Config->
