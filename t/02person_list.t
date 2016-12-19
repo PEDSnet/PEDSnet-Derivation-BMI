@@ -34,13 +34,15 @@ my $error = $@;
 
 isa_ok($q, 'Rose::DBx::CannedQuery', 'Ht/wt retrieval query');
 is($error, '', 'No error constructing query');
-ok($q->execute(261461), 'Execute for test person');
+ok($q->execute(2), 'Execute for test person');
 
 my $list = eval { $backend->fetch_chunk($q); };
 $error = $@;
+$error = 'No results' if $error eq '' and not @$list;
+
 is($error, '', 'No error executing query');
 eq_or_diff($list,
-	   [ grep { $_->{person_id} == 261461 } @$test_list ],
+	   [ grep { $_->{person_id} == 2 } @$test_list ],
 	   'Result is correct');
 
 

@@ -8,7 +8,7 @@ use warnings;
 
 package PEDSnet::Derivation::BMI;
 
-our($VERSION) = '0.01';
+our($VERSION) = '0.02';
 our($REVISION) = '$Revision$' =~ /: (\d+)/ ? $1 : 0;
 
 use Moo 2;
@@ -150,6 +150,7 @@ sub bmi_meas_for_person {
       $bmi_rec->{unit_concept_id} = $bmi_unit_cid;
       $bmi_rec->{unit_source_value} = $bmi_unit_sv;
       $bmi_rec->{measurement_source_value} = "PEDSnet BMI computation v$VERSION";
+      $bmi_rec->{measurement_source_concept_id} = 0;
       $bmi_rec->{value_source_value} =
     	"wt: $wt->{measurement_id}, ht: $ht->{measurement_id}";
     }
@@ -165,6 +166,7 @@ sub bmi_meas_for_person {
 	 unit_concept_id => $bmi_unit_cid,
 	 unit_source_value => $bmi_unit_sv,
 	 measurement_source_value => "PEDSnet BMI computation v$VERSION",
+	 measurement_source_concept_id => 0,
 	 value_source_value => "wt: $wt->{measurement_id}, ht: $ht->{measurement_id}",
 	};
       # Optional keys - should be there but may be skipped if input
@@ -173,8 +175,40 @@ sub bmi_meas_for_person {
                          provider_id visit_occurrence_id site /) {
         $bmi_rec->{$k} = $wt->{$k} if exists $wt->{$k};
       }
-
     }
+
+    # For operator, if either of the source records have a
+    # greater-than operator, apply that to the BMI, then look for
+    # less-than, and finally default to equality.
+    if (defined $wt->{operator_concept_id} and
+	($wt->{operator_concept_id} == 4171755 or
+	 $wt->{operator_concept_id} == 4172704)) {
+      $bmi_rec->{operator_concept_id} = $wt->{operator_concept_id};
+      $bmi_rec->{operator_source_value} = $wt->{operator_source_value};
+    }
+    elsif (defined $ht->{operator_concept_id} and
+	   ($ht->{operator_concept_id} == 4171755 or
+	    $ht->{operator_concept_id} == 4172704)) {
+      $bmi_rec->{operator_concept_id} = $ht->{operator_concept_id};
+      $bmi_rec->{operator_source_value} = $ht->{operator_source_value};
+    }
+    elsif (defined $wt->{operator_concept_id} and
+	   ($wt->{operator_concept_id} == 4171754 or
+	    $wt->{operator_concept_id} == 4172756)) {
+      $bmi_rec->{operator_concept_id} = $wt->{operator_concept_id};
+      $bmi_rec->{operator_source_value} = $wt->{operator_source_value};
+    }
+    elsif (defined $ht->{operator_concept_id} and
+	   ($ht->{operator_concept_id} == 4171754 or
+	    $ht->{operator_concept_id} == 4172756)) {
+      $bmi_rec->{operator_concept_id} = $ht->{operator_concept_id};
+      $bmi_rec->{operator_source_value} = $ht->{operator_source_value};
+    }
+    else {
+      $bmi_rec->{operator_concept_id} = 4172703;
+      $bmi_rec->{operator_source_value} = '=';
+    }
+
     push @bmis, $bmi_rec;
   }
   
