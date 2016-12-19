@@ -258,11 +258,10 @@ sub process_person_chunk {
   my $get_qry = $self->get_meas_for_person_qry;
   my $src = $self->src_backend;
   my $saved = 0;
-  my($save_full_chunk, @bmis);
 
   foreach my $p ($person_list->@*) {
     next unless $src->execute($get_qry, [ $p->{person_id} ]);
-    my(@ht_wt, @rslt);
+    my(@ht_wt);
 
     # Wrap into one go, since rare for a single patient to have a huge
     # number of height and weight measurements
