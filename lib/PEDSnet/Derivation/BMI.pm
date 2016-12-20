@@ -264,7 +264,7 @@ sub _save_bmis {
 
   push @$pending, @$bmi_list;
   
-  if (@$pending > $chunk_size) {
+  while (@$pending > $chunk_size) {
     $self->sink_backend->store_chunk($self->save_meas_qry($chunk_size),
 				     [ splice @$pending, 0, $chunk_size ]);
   }
