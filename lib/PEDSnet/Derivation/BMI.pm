@@ -316,9 +316,12 @@ sub generate_bmis {
   my $self = shift;
   my $src = $self->src_backend;
   my $config = $self->config;
-  my $saved = 0;
+  my($saved_rec, $saved_pers) = (0,0);
   my $chunk_size =  $config->person_chunk_size;
+  my $verbose = $self->verbose;
   my($pt_qry, $chunk);
+
+  $self->remark("Finding patients with measurements") if $verbose;
 
   # CSV backend can't handle self-joins or subselects,
   # so we limit preprocessing
@@ -341,17 +344,25 @@ sub generate_bmis {
 		      ' and m2.measurement_concept_id = ' .
 		      $config->wt_measurement_concept_id );
   }
+
   return unless $pt_qry->execute;
 
+  $self->remark("Starting computation") if $verbose;
   while ($chunk = $src->fetch_chunk($pt_qry, $chunk_size) and @$chunk) {
     my $ct = $self->process_person_chunk($chunk);
-    $saved += $ct;
-    $self->remark("Completed $ct persons (total $saved)") if $self->verbose;
+    $saved_rec += $ct;
+    $saved_pers += scalar @$chunk;
+    $self->remark([ 'Completed %d persons/%d records (total %d/%d)',
+		    scalar @$chunk, $ct, $saved_pers, $saved_rec ])
+      if $self->verbose;
   }
 
   $self->flush_output;
 
-  $saved;
+  $self->remark("Done") if $self->verbose;
+  
+  return ($saved_rec, $saved_pers) if wantarray;
+  return $saved_rec;
   
 }
 
