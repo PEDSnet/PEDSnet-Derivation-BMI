@@ -34,7 +34,7 @@ $backend->clone_table($config->input_measurement_table,
 		      $config->output_measurement_table);
 
 
-my @expected =
+my @expected = map { s/v\d+\.\d+/vX/ }
   path('full_table_output_expected')->absolute($FindBin::Bin)->lines;
 
 is($handle->generate_bmis, @expected - 1, 'Process full table');
@@ -42,7 +42,8 @@ is($handle->generate_bmis, @expected - 1, 'Process full table');
 my $outp = path($config->output_measurement_table)->
 	   absolute($FindBin::Bin);
 $outp->remove
-  if eq_or_diff([ $outp->lines ], \@expected, 'Output is correct');
+  if eq_or_diff([ map { s/v\d+\.\d+/vX/ } $outp->lines ],
+		\@expected, 'Output is correct');
 
 done_testing;
 

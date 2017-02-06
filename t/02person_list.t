@@ -57,7 +57,7 @@ $backend->clone_table($config->input_measurement_table,
 		      $config->output_measurement_table);
 
 my $person_list = [ map { { person_id => $_} } 1..3 ];
-my @expected =
+my @expected = map { s/v\d+\.\d+/vX/ }
   path('person_list_output_expected')->absolute($FindBin::Bin)->lines;
 
 is($handle->process_person_chunk($person_list), @expected - 1, 'Process person list');
@@ -67,7 +67,8 @@ $handle->flush_output;
 my $outp = path($config->output_measurement_table)->
 	   absolute($FindBin::Bin);
 $outp->remove
-  if eq_or_diff([ $outp->lines ], \@expected, 'Output is correct');
+  if eq_or_diff([ map { s/v\d+\.\d+/vX/ } $outp->lines ],
+		\@expected, 'Output is correct');
 
 done_testing;
 
