@@ -8,11 +8,11 @@ use warnings;
 
 package PEDSnet::Derivation::BMI::Config;
 
-our($VERSION) = '0.01';
+our($VERSION) = '0.02';
 our($REVISION) = '$Revision$' =~ /: (\d+)/ ? $1 : 0;
 
 use Moo 2;
-use Types::Standard qw/ Bool Str Int HashRef ArrayRef /;
+use Types::Standard qw/ Bool Str Int HashRef ArrayRef Enum /;
 
 extends 'PEDSnet::Derivation::Config';
 
@@ -128,6 +128,61 @@ has 'output_chunk_size' =>
 
 sub build_output_chunk_size {
   shift->_build_config_param('output_chunk_size') // 1000;
+}
+
+has 'sql_flavor' =>
+  ( isa => Enum[ qw/ limited full /], is => 'ro', required => 0, lazy => 1,
+    builder => 'build_sql_flavor' );
+
+# May be inefficient, but will work
+sub build_sql_flavor { 'limited' }
+
+has 'person_finder_sql' =>
+  ( isa => Str, is => 'ro', required => 1, lazy => 1,
+    builder => 'build_person_finder_sql' );
+
+sub build_person_finder_sql {
+  my $self = shift;
+
+  my $sql = $self->_build_config_param('person_finder_sql');
+  return $sql if $sql;
+
+  my @ht_conc = $self->ht_measurement_concept_ids->@*;
+  my @wt_conc = $self->wt_measurement_concept_ids->@*;
+  my($ht_constraint, $wt_constraint);
+
+  # Put up with backends that can't handle single arg to IN
+  # N.B. 'IN' must be in caps to accommodate SQL::Statement
+  if (@ht_conc > 1) {
+    $ht_constraint = 'IN (' . join(', ', @ht_conc) . ')';
+  }
+  else {
+    $ht_constraint = '= ' . $ht_conc[0];
+  }
+  if (@wt_conc > 1) {
+    $wt_constraint = 'IN (' . join(', ', @wt_conc) . ')';
+  }
+  else {
+    $wt_constraint = '= ' . $wt_conc[0];
+  }
+  
+  # CSV backend can't handle self-joins or subselects,
+  # so we limit preprocessing by just looking for heights
+  if ($self->sql_flavor eq 'limited') { 
+    'select distinct person_id from ' .
+      $self->input_measurement_table .
+      " where measurement_concept_id $ht_constraint ";
+  }
+  else {
+    'select distinct m1.person_id from ' .
+      $self->input_measurement_table .
+      ' m1 inner join ' .
+      $self->input_measurement_table .
+      ' m2 on m1.person_id = m2.person_id ' .
+      " where m1.measurement_concept_id $ht_constraint" .
+      " and m2.measurement_concept_id $wt_constraint";
+  }
+  
 }
 
 has 'person_chunk_size' =>

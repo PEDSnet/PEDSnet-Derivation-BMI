@@ -323,28 +323,7 @@ sub generate_bmis {
 
   $self->remark("Finding patients with measurements") if $verbose;
 
-  # CSV backend can't handle self-joins or subselects,
-  # so we limit preprocessing
-  if (ref($src) =~ /::CSV/) { 
-    $pt_qry =
-      $src->build_query('select distinct person_id from ' .
-		      $config->input_measurement_table .
-		      ' where measurement_concept_id = ' .
-		      $config->ht_measurement_concept_id );
-  }
-  else {
-    $pt_qry =
-      $src->build_query('select distinct m1.person_id from ' .
-		      $config->input_measurement_table .
-		      ' m1 inner join ' .
-		      $config->input_measurement_table .
-		      ' m2 on m1.person_id = m2.person_id ' .
-		      ' where m1.measurement_concept_id = ' .
-		      $config->ht_measurement_concept_id .
-		      ' and m2.measurement_concept_id = ' .
-		      $config->wt_measurement_concept_id );
-  }
-
+  $pt_qry = $src->build_query($config->person_finder_sql);
   return unless $pt_qry->execute;
 
   $self->remark("Starting computation") if $verbose;
