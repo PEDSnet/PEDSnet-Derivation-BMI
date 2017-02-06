@@ -61,9 +61,7 @@ my $config = new_ok('PEDSnet::Derivation::BMI::Config');
 cmp_ok($config->meas_match_limit_sec, '==', 60 * 24 * 60 * 60,
        '60 day default limit on ht-wt registration');
 
-foreach my $c ( [ ht_measurement_concept_id => 3023540 ],
-		[ wt_measurement_concept_id => 3013762 ],
-		[ bmi_measurement_concept_id => 3038553 ],
+foreach my $c ( [ bmi_measurement_concept_id => 3038553 ],
 		[ bmi_measurement_type_concept_id => 45754907 ],
 		[ bmi_unit_concept_id => 9531 ],
 		[ bmi_unit_source_value => 'kg/m2' ],
@@ -79,9 +77,15 @@ foreach my $c ( [ ht_measurement_concept_id => 3023540 ],
 	 $c->[1], "Value for $c->[0]");
 }
 
-is_deeply($config->clone_attributes_except,
-	  [ qw/ measurement_id special_attr measurement_dt / ],
-	  'Value for clone_attributes_except');
+foreach my $c ([ ht_measurement_concept_ids => [ 3023540, 3036277 ] ],
+	       [ wt_measurement_concept_ids => [ 3013762 ] ],
+	       [ clone_attributes_except =>
+		 [ qw/ measurement_id special_attr measurement_dt / ], ]) {
+  my $meth = $c->[0];
+  is_deeply( $config->$meth,
+	     $c->[1],
+	     "Value for $c->[0]" );
+}
 
 
 if ($has_sqlite) {

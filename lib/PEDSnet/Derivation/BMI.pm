@@ -8,7 +8,7 @@ use warnings;
 
 package PEDSnet::Derivation::BMI;
 
-our($VERSION) = '0.02';
+our($VERSION) = '0.03';
 our($REVISION) = '$Revision$' =~ /: (\d+)/ ? $1 : 0;
 
 use Moo 2;
@@ -103,18 +103,18 @@ sub find_closest_meas {
 sub bmi_meas_for_person {
   my( $self, $measurements ) = @_;
   my $conf = $self->config;
-  my($ht_cid, $wt_cid, $bmi_cid, $bmi_type_cid, $bmi_unit_cid,
+  my($ht_cids, $wt_cids, $bmi_cid, $bmi_type_cid, $bmi_unit_cid,
      $bmi_unit_sv, $clone) =
-    ($conf->ht_measurement_concept_id,
-     $conf->wt_measurement_concept_id,
+    ({ map { $_ => 1 } $conf->ht_measurement_concept_ids->@* },
+     { map { $_ => 1 } $conf->wt_measurement_concept_ids->@* },
      $conf->bmi_measurement_concept_id,
      $conf->bmi_measurement_type_concept_id,
      $conf->bmi_unit_concept_id,
      $conf->bmi_unit_source_value,
      $conf->clone_bmi_measurements);
-  my @hts = grep { $_->{measurement_concept_id} == $ht_cid }
+  my @hts = grep { exists $ht_cids->{ $_->{measurement_concept_id} } }
             $measurements->@*;
-  my @wts = grep { $_->{measurement_concept_id} == $wt_cid }
+  my @wts = grep { exists $wt_cids->{ $_->{measurement_concept_id} } }
             $measurements->@*;
   my $verbose = $self->verbose;
 
@@ -226,8 +226,8 @@ sub get_meas_for_person_qry {
   $self->src_backend->
     get_query(q[SELECT * FROM ] . $config->input_measurement_table .
               q[ WHERE measurement_concept_id IN (] .
-	      join(',', $config->ht_measurement_concept_id,
-		   $config->wt_measurement_concept_id) . q[)
+	      join(',', $config->ht_measurement_concept_ids->@*,
+		   $config->wt_measurement_concept_ids->@*) . q[)
               AND person_id = ?]);
 }
 

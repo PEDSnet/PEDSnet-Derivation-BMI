@@ -27,24 +27,32 @@ sub _build_config_param {
 }
 
 
-has 'ht_measurement_concept_id' =>
-  ( isa => Int, is => 'ro', required => 1,
-    lazy => 1, builder => 'build_ht_measurement_concept_id' );
+has 'ht_measurement_concept_ids' =>
+  ( isa => ArrayRef[Int], is => 'ro', required => 1,
+    coerce => sub { ref $_[0] ? $_[0] : [ split /,/, $_[0] ] },
+    lazy => 1, builder => 'build_ht_measurement_concept_ids' );
 
-sub build_ht_measurement_concept_id {
-  shift->_build_config_param('ht_measurement_concept_id',
-			     q[concept_code = '3137-7' and
+sub build_ht_measurement_concept_ids {
+  my $data =
+    shift->_build_config_param('ht_measurement_concept_ids',
+			       q[concept_code = '3137-7' and
                                standard_concept = 'S' and vocabulary_id = 'LOINC']);
+  return $data if ref $data;
+  return [ split /,/, $data ];
 }
 
-has 'wt_measurement_concept_id' =>
-  ( isa => Int, is => 'ro', required => 1,
-    lazy => 1, builder => 'build_wt_measurement_concept_id' );
+has 'wt_measurement_concept_ids' =>
+  ( isa => ArrayRef[Int], is => 'ro', required => 1,
+    coerce => sub { ref $_[0] ? $_[0] : [ split /,/, $_[0] ] },
+    lazy => 1, builder => 'build_wt_measurement_concept_ids' );
 
-sub build_wt_measurement_concept_id {
-  shift->_build_config_param('wt_measurement_concept_id',
-			     q[concept_code = '3141-9' and
+sub build_wt_measurement_concept_ids {
+  my $data =
+    shift->_build_config_param('wt_measurement_concept_ids',
+			       q[concept_code = '3141-9' and
                                standard_concept = 'S' and vocabulary_id = 'LOINC']);
+  return $data if ref $data;
+  return [ split /,/, $data ];
 }
 
 has 'bmi_measurement_concept_id' =>
