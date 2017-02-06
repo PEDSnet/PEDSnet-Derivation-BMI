@@ -259,6 +259,7 @@ sub save_meas_qry {
 
 sub _save_bmis {
   my( $self, $bmi_list) = @_;
+  return 0 unless $bmi_list and @$bmi_list;
   my $pending = $self->_pending_output;
   state $chunk_size = $self->config->output_chunk_size;
 
