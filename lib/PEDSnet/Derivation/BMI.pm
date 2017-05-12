@@ -1,6 +1,4 @@
 #!perl
-#
-# $Id$
 
 use 5.024;
 use strict;
@@ -9,7 +7,6 @@ use warnings;
 package PEDSnet::Derivation::BMI;
 
 our($VERSION) = '0.03';
-our($REVISION) = '$Revision$' =~ /: (\d+)/ ? $1 : 0;
 
 use Moo 2;
 
@@ -18,14 +15,54 @@ use Rose::DateTime::Util qw( parse_date );
 extends 'PEDSnet::Derivation';
 with 'MooX::Role::Chatty';
 
-has '_pending_output' =>
-  ( is => 'ro', required => 0, default => sub { [] });
+# Override default verbosity level - current MooX::Role::Chatty
+# default silences warnings.
+has '+verbose' => ( default => sub { -1; } );
 
-=head 1 METHODS
+=head1 NAME
+
+PEDSnet::Derivation::BMI - Compute body mass index in the PEDSnet CDM
+
+=head1 DESCRIPTION
+
+L<PEDSnet::Derivation::BMI> computes body mass index values based on
+weight and height values present in a PEDSnet CDM C<measurement>
+table.  Consistent with the PEDSnet CDM specification, weight values
+are treated as kg and heights as cm; the resulting BMI is in kg/m2.
+
+While a number of specifics can be changed as described in
+L<PEDSnet::Derivation::BMI::Config>, the default behavior is to
+compute a BMI for each weight with a corresponding height measurement
+within 60 days.  If multiple height measurements fall within that
+range, the value closest in time is used.  The resulting BMI
+measurement record takes its metadata from the weight record.
+
+Please note that L<PEDSnet::Derivation::BMI> will not populate
+C<measurement_id> in the records it writes.  This allows for the
+output table to populate it automaatically from a sequence or by a
+similar mechanism.  If not, the application code will need to do so.
+
+L<PEDSnet::Derivation::BMI> makes available the following methods:
+
+=head2 Methods
 
 =over 4
 
+=cut
+
+has '_pending_output' =>
+  ( isa => ArrayRef, is => 'ro', required => 0, default => sub { [] });
+
 =item compute_bmi( $self, $ht_cm, $wt_kg )
+
+Given I<$ht_cm> and I<$wt_kg>, return a BMI in kg/m2.  Returns nothing
+unless $ht_cm is greater than zero.
+
+If I<$wt_kg> is more than 200, it is treated as grams.  Similarly, if
+I<$ht_cm> is less than 3, it is treated as meters instead of cm.  In
+both cases, a warning is emitted.  Unfortunatley, because plausible
+values of height in inches and cm overlap significantly, no attempt is
+made to detect a value in inches.
 
 =cut
 
@@ -34,14 +71,41 @@ sub compute_bmi {
   return unless $ht_cm > 0;
 
   if ($wt_kg > 200) {
-    warn "Presuming weight $wt_kg is in g rather than kg\n";
+    $self->logger->warn("Presuming weight $wt_kg is in g rather than kg\n");
     $wt_kg /= 1000;
+  }
+
+  if ($ht_cm < 3) {
+    $self->logger->warn("Presuming height $ht_cm is in m rather than cm\n");
+    $ht_cm *= 100;
   }
 
   $wt_kg / ($ht_cm / 100) ** 2;
 }
 
 =item create_time_series( $self, $meas_list )
+
+Given a list of measurement records referred to by I<$meas_list>,
+return a reference to a list of hash references, each with two
+elements with these keys:
+
+=over 4
+
+=item meas
+
+The associated value is a measurement record from I<$meas_list>.  A
+new element, with key C<measurement_dt> is added, whose value is the
+L<DateTime> that results from parsing C<measurement_time>, or if
+that's undefined, L<measurement_date>.
+
+=item rdsec
+
+The associated value is the count of Rata Die seconds corresponding to
+the C<measurement_dt> element of L</meas>.
+
+=back
+
+The returned list is sorted in ascending datetime order.
 
 =cut
 
@@ -97,6 +161,17 @@ sub find_closest_meas {
 }
 
 =item bmi_meas_for_person( $self, $person_info )
+
+Compute BMI values from the measurement records in the list referred
+to by I<$person_info>, which are presumed to be from the same
+person.  If you want to get back BMI values, then the list must
+contain some height and weight measurements; it may also contain other
+measurements, which are ignored.
+
+Returns a reference to a list of measurement records for computed BMIs.
+
+BMI computation can be modified by a number of configuration settings,
+as described in L<PEDSnet::Derivation::BMI::Config>.
 
 =cut
 
@@ -170,7 +245,7 @@ sub bmi_meas_for_person {
 	 value_source_value => "wt: $wt->{measurement_id}, ht: $ht->{measurement_id}",
 	};
       # Optional keys - should be there but may be skipped if input
-      # was not read from measurement tabl    
+      # was not read from measurement table
       foreach my $k (qw/ measurement_result_date measurement_result_time
                          provider_id visit_occurrence_id site /) {
         $bmi_rec->{$k} = $wt->{$k} if exists $wt->{$k};
@@ -217,6 +292,11 @@ sub bmi_meas_for_person {
 
 =item get_meas_for_person_qry
 
+Returns a L<Rose::DBx::CannedQuery::Glycosylated> object containing a
+query to retrieve all height and weight measurement records for a
+single person, whose C<person_id> is passed as the sole bind parameter
+to the query.
+
 =cut
 
 sub get_meas_for_person_qry {
@@ -231,7 +311,11 @@ sub get_meas_for_person_qry {
               AND person_id = ?]);
 }
 
-=item save_meas_qry($rows_to_save)
+=item save_meas_qry($chunk_size)
+
+Returns a L<Rose::DBx::CannedQuery::Glycosylated> object containing a
+query that will save I<$chunk_size> measurement records.  The query
+will expect values for the measurement records as bind parameter values.
 
 =cut
 
@@ -272,6 +356,15 @@ sub _save_bmis {
   return scalar @$bmi_list;
 }
 
+=item flush_output
+
+Flush any pending output records to the sink backend.  In most cases,
+this is done for you automatically, but the method is public in case a
+subclass or application wants to flush manually in circumstances where
+it feels it's warranted.
+
+=cut
+
 sub flush_output {
   my $self = shift;
   my $pending = $self->_pending_output;
@@ -281,6 +374,10 @@ sub flush_output {
     @$pending = ();
   }
 }
+
+=for Pod::Coverage DEMOLISH
+
+=cut
 
 sub DEMOLISH { shift->flush_output }
 
@@ -310,6 +407,13 @@ sub process_person_chunk {
 }
 
 =item generate_bmis()
+
+Using data from the L<config/PEDSnet::Derivation> attribute, compute
+BMIs for everyone.
+
+In scalar context, returns the number of BMI records saved.  In list
+contest returns the number of BMI records and the number of unique
+persons with at least one BMI record.
 
 =cut
 
@@ -350,82 +454,6 @@ sub generate_bmis {
 
 __END__
 
-=head1 NAME
-
-PEDSnet::Derivation::BMI - blah blah blah
-
-=head1 SYNOPSIS
-
-  use PEDSnet::Derivation::BMI;
-  blah blah blah
-
-=head1 DESCRIPTION
-
-Blah blah blah.
-
-The following command line options are available:
-
-=head1 OPTIONS
-
-=over 4
-
-=item B<--help>
-
-Output a brief help message, then exit.
-
-=item B<--man>
-
-Output this documentation, then exit.
-
-=item B<--version>
-
-Output the program version, then exit.
-
-=back
-
-=head1 USE AS A MODULE
-
-Is encouraged.  This file can be included in a larger program using
-Perl's L<require> function.  It provides the following functions in the
-package B<Foo>:
-
-=head2 FUNCTIONS
-
-It helps to document these if you encourage use as a module.
-
-=over 4
-
-=back
-
-=head2 EXPORT
-
-None by default.
-
-=head1 SEE ALSO
-
-Mention other useful documentation such as the documentation of
-related modules or operating system documentation (such as man pages
-in UNIX), or any relevant external documentation such as RFCs or
-standards.
-
-If you have a mailing list set up for your module, mention it here.
-
-If you have a web site set up for your module, mention it here.
-
-=head1 DIAGNOSTICS
-
-Any message produced by an included package, as well as
-
-=over 4
-
-=item B<EANY>
-
-Anything went wrong.
-
-=item B<Something to say here>
-
-A warning that something newsworthy happened.
-
 =back
 
 =head1 BUGS AND CAVEATS
@@ -434,7 +462,7 @@ Are there, for certain, but have yet to be cataloged.
 
 =head1 VERSION
 
-version 0.01
+version 0.03
 
 =head1 AUTHOR
 
@@ -446,5 +474,9 @@ Copyright (C) 2016 by Charles Bailey
 
 This software may be used under the terms of the Artistic License or
 the GNU General Public License, as the user prefers.
+
+This code was written at the Children's Hospital of Philadelphia as
+part of L<PCORI|http://www.pcori.org>-funded work in the
+L<PEDSnet|http://www.pedsnet.org> Data Coordinating Center.
 
 =cut
