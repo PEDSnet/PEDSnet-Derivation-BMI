@@ -11,6 +11,7 @@ our($VERSION) = '0.03';
 use Moo 2;
 
 use Rose::DateTime::Util qw( parse_date );
+use Types::Standard qw/ ArrayRef InstanceOf /;
 
 extends 'PEDSnet::Derivation';
 with 'MooX::Role::Chatty';
@@ -381,7 +382,67 @@ sub flush_output {
 
 sub DEMOLISH { shift->flush_output }
 
-=item process_person_list($persons)
+has '_person_qry' => ( isa => InstanceOf['Rose::DBx::CannedQuery'], is => 'rwp',
+		       lazy => 1, builder => '_build_person_qry');
+
+# _get_person_qry
+# Returns an active and executed L<Rose::DBx::CannedQuery> object used
+# for fetching person records.  If any arguments are present, they are
+# passed to the query as bind parameter values for execution.
+#
+# Returns nothing if the query could not be constructed or executed.
+#
+# This exists as a separate method only to provide a means to get bind
+# parameters to the query, which a standard builder method cannot
+# accommodate. If you need to use bind parameters, you have to call
+# _get_person_qry yourself and pass the result to the
+# PEDSnet::Derivation::BMI constructor as the value of _person_qry.
+# If you can avoid this, consider it.  If you can't, consider wrapping
+# the constructor in a method that does this bookkeeping, so the user
+# doesn't need to.
+
+sub _get_person_qry {
+  my $self = shift;
+  my $pt_qry = $self->src_backend->build_query($self->config->person_finder_sql);
+  return unless $pt_qry && $pt_qry->execute(@_);
+
+  $pt_qry;
+}
+
+sub _build_person_qry { shift->_get_person_qry; }
+
+=item get_person_chunk($chunk)
+
+Returns a reference to an array of person records.  If I<$chunk> is
+present, specifies the desired number of records.  If it's not,
+defaults to L<person_chunk_size/PEDSnet::Derivation::BMI::Config>.
+
+This implementation fetches records as specified by
+L<person_finder_sql/PEDSnet::Derivation::BMI::Config>.  You are free
+to override this behavior in a subclass.  In particular, if you want
+to parallelize computation over a large source database,
+L</get_person_chunk> and
+L<person_finder_sql/PEDSnet::Derivation::BMI::Config> give you
+opportunities to point each process at a subset of persons.
+
+=cut
+
+sub get_person_chunk {
+  my $ self = shift;
+  my $qry = $self->_person_qry;
+  my $chunk_size =  $self->config->person_chunk_size;
+  
+  $self->src_backend->fetch_chunk($self->_person_qry, $chunk_size);
+}
+
+=item process_person_chunk($persons)
+
+For each person record in the list referred to by I<$persons>, compute
+BMIs from measurement data in the source backend, and save results to
+the sink backend.  A person record is a hash reference; the only
+element used is C<person_id>.
+
+Returns the number of BMI records saved.
 
 =cut
 
@@ -422,17 +483,13 @@ sub generate_bmis {
   my $src = $self->src_backend;
   my $config = $self->config;
   my($saved_rec, $saved_pers) = (0,0);
-  my $chunk_size =  $config->person_chunk_size;
   my $verbose = $self->verbose;
   my($pt_qry, $chunk);
 
   $self->remark("Finding patients with measurements") if $verbose;
 
-  $pt_qry = $src->build_query($config->person_finder_sql);
-  return unless $pt_qry->execute;
-
   $self->remark("Starting computation") if $verbose;
-  while ($chunk = $src->fetch_chunk($pt_qry, $chunk_size) and @$chunk) {
+  while ($chunk = $self->get_person_chunk and @$chunk) {
     my $ct = $self->process_person_chunk($chunk);
     $saved_rec += $ct;
     $saved_pers += scalar @$chunk;
