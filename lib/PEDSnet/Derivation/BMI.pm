@@ -130,6 +130,18 @@ sub create_time_series {
 
 =item find_closest_meas( $self, $time_series, $target_meas, $limit_sec );
 
+Find the element of I<$time_series> closest in time to I<$target_meas>
+(either before or after).  If I<$target_meas> doesn't have a
+C<measurement_dt> element, one is added as described above (cf. L</create_time_series>).
+
+If no element of I<$time_series> is within I<limit_sec> of
+I<$target_meas>, returns nothing.  Otherwise, returns the
+B<measurement record> from the closest element.
+
+If I<$limit_sec> is not supplied, the configuration value
+C<meas_match_limit_sec> is used as a default.  If that's not set
+either, then 0 is used as a last resort.
+
 =cut
 
 sub find_closest_meas {
