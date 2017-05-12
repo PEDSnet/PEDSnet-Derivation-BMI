@@ -339,7 +339,6 @@ sub save_meas_qry {
   my $full_chunk = $self->config->output_chunk_size;
   state $cols = [ grep { $_ ne 'measurement_id' }
 		  $sink->column_names($tab) ];
-  my $placeholders = 
   my $sql = qq[INSERT INTO $tab (] . join(',', @$cols) .
             q[) VALUES ] .
 	    join(',',
