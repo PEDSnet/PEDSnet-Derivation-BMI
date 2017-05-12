@@ -151,7 +151,7 @@ sub find_closest_meas {
     unless exists $targ->{measurement_dt};
 
   my $target_rdsec = $targ->{measurement_dt}->utc_rd_as_seconds;
-  my $last_intvl = ($limit // $self->config->meas_match_limit_sec) + 1;
+  my $last_intvl = ($limit // $self->config->meas_match_limit_sec // 0) + 1;
   my $current_cand;
 
   foreach my $m ($ts->@*) {
