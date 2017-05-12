@@ -115,7 +115,7 @@ sub create_time_series {
   my @series;
 
   foreach my $m ( $meas_list->@*) {
-    $m->{measurement_dt} = parse_date($m->{measurement_time} // $m->{measurement_date})
+    $m->{measurement_dt} //= parse_date($m->{measurement_time} // $m->{measurement_date})
       unless exists $m->{measurement_dt};
 
     push @series, { rdsec => $m->{measurement_dt}->utc_rd_as_seconds,
@@ -135,7 +135,7 @@ sub create_time_series {
 sub find_closest_meas {
   my( $self, $ts, $targ, $limit ) = @_;
 
-  $targ->{measurement_dt} = parse_date($targ->{measurement_time} // $targ->{measurement_date})
+  $targ->{measurement_dt} //= parse_date($targ->{measurement_time} // $targ->{measurement_date})
     unless exists $targ->{measurement_dt};
 
   my $target_rdsec = $targ->{measurement_dt}->utc_rd_as_seconds;
