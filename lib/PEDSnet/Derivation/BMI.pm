@@ -426,14 +426,14 @@ sub _build_person_qry { shift->_get_person_qry; }
 
 Returns a reference to an array of person records.  If I<$chunk> is
 present, specifies the desired number of records.  If it's not,
-defaults to L<person_chunk_size/PEDSnet::Derivation::BMI::Config>.
+defaults to L<PEDSnet::Derivation::BMI::Config/person_chunk_size>.
 
 This implementation fetches records as specified by
-L<person_finder_sql/PEDSnet::Derivation::BMI::Config>.  You are free
+L<PEDSnet::Derivation::BMI::Config/person_finder_sql>.  You are free
 to override this behavior in a subclass.  In particular, if you want
 to parallelize computation over a large source database,
 L</get_person_chunk> and
-L<person_finder_sql/PEDSnet::Derivation::BMI::Config> give you
+L<PEDSnet::Derivation::BMI::Config/person_finder_sql> give you
 opportunities to point each process at a subset of persons.
 
 =cut
@@ -480,7 +480,7 @@ sub process_person_chunk {
 
 =item generate_bmis()
 
-Using data from the L<config/PEDSnet::Derivation> attribute, compute
+Using data from the L<PEDSnet::Derivation/config> attribute, compute
 BMIs for everyone.
 
 In scalar context, returns the number of BMI records saved.  In list

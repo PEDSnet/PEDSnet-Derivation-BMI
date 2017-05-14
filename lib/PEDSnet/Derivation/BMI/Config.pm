@@ -358,7 +358,7 @@ sub build_person_finder_sql {
 =item build_person_chunk_size
 
 The number of C<person_id>s to retrieve at a time from the source
-backend in L<generate_bmis/PEDSnet::Derivation::BMI>.  
+backend in L<PEDSnet::Derivation::BMI/generate_bmis>.  
 
 Defaults to 1000.
 

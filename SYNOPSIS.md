@@ -107,14 +107,14 @@ similar mechanism.  If not, the application code will need to do so.
 
     Returns a reference to an array of person records.  If _$chunk_ is
     present, specifies the desired number of records.  If it's not,
-    defaults to ["PEDSnet::Derivation::BMI::Config" in person\_chunk\_size](https://metacpan.org/pod/person_chunk_size#PEDSnet::Derivation::BMI::Config).
+    defaults to ["person\_chunk\_size" in PEDSnet::Derivation::BMI::Config](https://metacpan.org/pod/PEDSnet::Derivation::BMI::Config#person_chunk_size).
 
     This implementation fetches records as specified by
-    ["PEDSnet::Derivation::BMI::Config" in person\_finder\_sql](https://metacpan.org/pod/person_finder_sql#PEDSnet::Derivation::BMI::Config).  You are free
+    ["person\_finder\_sql" in PEDSnet::Derivation::BMI::Config](https://metacpan.org/pod/PEDSnet::Derivation::BMI::Config#person_finder_sql).  You are free
     to override this behavior in a subclass.  In particular, if you want
     to parallelize computation over a large source database,
     ["get\_person\_chunk"](#get_person_chunk) and
-    ["PEDSnet::Derivation::BMI::Config" in person\_finder\_sql](https://metacpan.org/pod/person_finder_sql#PEDSnet::Derivation::BMI::Config) give you
+    ["person\_finder\_sql" in PEDSnet::Derivation::BMI::Config](https://metacpan.org/pod/PEDSnet::Derivation::BMI::Config#person_finder_sql) give you
     opportunities to point each process at a subset of persons.
 
 - process\_person\_chunk($persons)
@@ -128,7 +128,7 @@ similar mechanism.  If not, the application code will need to do so.
 
 - generate\_bmis()
 
-    Using data from the ["PEDSnet::Derivation" in config](https://metacpan.org/pod/config#PEDSnet::Derivation) attribute, compute
+    Using data from the ["config" in PEDSnet::Derivation](https://metacpan.org/pod/PEDSnet::Derivation#config) attribute, compute
     BMIs for everyone.
 
     In scalar context, returns the number of BMI records saved.  In list
