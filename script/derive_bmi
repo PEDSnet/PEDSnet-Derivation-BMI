@@ -18,8 +18,9 @@ This is a simple application that makes use of
 L<PEDSnet::Derivation::BMI>.  It relies entirely on configuration
 file(s) for customization.  Command-line arguments are taken as
 configuration file I<stems> (i.e. path up to basename with no
-extension).  It also looks for files in the current working directory
-with the same basename as this application or a basename of F<bmi>.
+extension), relative to the current working directory.  It also looks
+for files in the current working directory with the same basename as
+this application or a basename of F<bmi>.
 
 In addition to the configuration items defined in
 L<PEDSnet::Derivation::BMI::Config>, the application uses a few
@@ -64,6 +65,9 @@ our $VERSION = '1.00';
 
 sub _setup_config {
   my($stems, $section) = @_;
+  # Anchor relative to cwd here, because PEDSnet::Derivation::Config
+  # will anchor relative to the application.
+  $stems = [ map { path($_)->absolute } @$stems ] if $stems and @$stems;
   PEDSnet::Derivation::BMI::Config->
       new(config_stems => [ @$stems,
 			    path($0)->basename(qr/\.[^.]*$/),
