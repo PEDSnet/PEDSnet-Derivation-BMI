@@ -139,7 +139,8 @@ unless (caller) {
     
   unless (Getopt::Long::GetOptions(help => \$help, man => \$man,
 				   version => \$version,
-				   section => \$section, verbose => \$verbose)
+				   'section=s' => \$section,
+				   'verbose=i' => \$verbose)
 	  and not $help and not $man) {
     require Pod::Usage;
     Pod::Usage::pod2usage( -verbose => ($man ? 2 : 0), -exitval => 1);
