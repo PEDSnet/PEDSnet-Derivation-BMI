@@ -13,6 +13,7 @@ LABEL description "Simple image for PEDSnet::Derivation::BMI"
 LABEL maintainer "Charles Bailey <baileyc@email.chop.edu>"
 
 # Build using the current version on GitHub
+RUN cpanm git://github.com/PEDSnet/PEDSnet-Derivation
 RUN cpanm git://github.com/PEDSnet/PEDSnet-Derivation-BMI
 
 # Build using released version of PEDSnet::Derivation
@@ -20,7 +21,9 @@ RUN cpanm git://github.com/PEDSnet/PEDSnet-Derivation-BMI
 
 # Alternatively, to install local copy, first say
 #   dzil build
-# then build using local version
+# then build using local version (Remember that you'll
+# need to do the same for PEDSnet::Derivation if you want
+# to use a non-CPAN version)
 #COPY PEDSnet-Derivation-BMI-*.tar.gz /src/
 #RUN cpanm /src/*.tar.gz
 
