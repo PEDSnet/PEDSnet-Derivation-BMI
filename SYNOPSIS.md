@@ -124,7 +124,9 @@ similar mechanism.  If not, the application code will need to do so.
     the sink backend.  A person record is a hash reference; the only
     element used is `person_id`.
 
-    Returns the number of BMI records saved.
+    Returns the number of BMI records saved in scalar context, or in list
+    context the number of BMI records saved followed by the number of
+    persons having at least one BMI record saved.
 
 - generate\_bmis()
 

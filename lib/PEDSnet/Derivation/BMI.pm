@@ -453,7 +453,9 @@ BMIs from measurement data in the source backend, and save results to
 the sink backend.  A person record is a hash reference; the only
 element used is C<person_id>.
 
-Returns the number of BMI records saved.
+Returns the number of BMI records saved in scalar context, or in list
+context the number of BMI records saved followed by the number of
+persons having at least one BMI record saved.
 
 =cut
 
@@ -461,7 +463,8 @@ sub process_person_chunk {
   my( $self, $person_list ) = @_;
   my $get_qry = $self->get_meas_for_person_qry;
   my $src = $self->src_backend;
-  my $saved = 0;
+  my $saved_rec = 0;
+  my(%saved_pers);
 
   foreach my $p ($person_list->@*) {
     next unless $src->execute($get_qry, [ $p->{person_id} ]);
@@ -470,12 +473,16 @@ sub process_person_chunk {
     # Wrap into one go, since rare for a single patient to have a huge
     # number of height and weight measurements
     while (my @rows = $src->fetch_chunk($get_qry)->@*) { push @ht_wt, @rows }
-    
-    $saved += $self->_save_bmis($self->bmi_meas_for_person(\@ht_wt));
 
+    if (my $bmis = $self->bmi_meas_for_person(\@ht_wt)) {
+      # 
+      $saved_pers{ $p->{person_id} }++;
+      $saved_rec += $self->_save_bmis($bmis);
+    }
   }
 
-  $saved;
+  return ($saved_rec, scalar keys %saved_pers) if wantarray;
+  return $saved_rec;
 }
 
 =item generate_bmis()
