@@ -265,8 +265,7 @@ has 'sql_flavor' =>
   ( isa => Enum[ qw/ limited full /], is => 'ro', required => 0, lazy => 1,
     builder => 'build_sql_flavor' );
 
-# May be inefficient, but will work
-sub build_sql_flavor { 'limited' }
+sub build_sql_flavor { shift->_build_config_param('sql_flavor') // 'limited' }
 
 =item person_finder_sql
 
