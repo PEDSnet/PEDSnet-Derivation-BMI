@@ -1,6 +1,5 @@
 #!perl
 #
-# $Id$
 
 use 5.010;
 use strict;
@@ -9,7 +8,6 @@ use warnings;
 package PEDSnet::Derivation::BMI::Config;
 
 our($VERSION) = '0.02';
-our($REVISION) = '$Revision$' =~ /: (\d+)/ ? $1 : 0;
 
 =head1 NAME
 
@@ -49,9 +47,9 @@ sub _build_config_param {
   return $cids[0]->{concept_id};
 }
 
-=item ht_measurement_concept_ids
+=for Pod::Coverage build_.+
 
-=item build_ht_measurement_concept_ids
+=item ht_measurement_concept_ids
 
 A reference to an array of C<measurement_concept_id> values indicating
 that the record contains a height in cm or meters.
@@ -80,8 +78,6 @@ sub build_ht_measurement_concept_ids {
 
 =item wt_measurement_concept_ids
 
-=item build_wt_measurement_concept_ids
-
 A reference to an array of C<measurement_concept_id> values indicating
 that the record contains a weight in kg or grams.
 
@@ -109,8 +105,6 @@ sub build_wt_measurement_concept_ids {
 
 =item bmi_measurement_concept_id
 
-=item build_bmi_measurement_concept_id
-
 The C<measurement_concept_id> value to be used in newly-created BMI records.
 
 If no value is provided, an attempt is made to look up the concept
@@ -131,8 +125,6 @@ sub build_bmi_measurement_concept_id {
 
 =item bmi_measurement_type_concept_id
 
-=item build_bmi_measurement_type_concept_id
-
 The C<measurement_type_concept_id> value to be used in newly-created BMI records.
 
 If no value is provided, an attempt is made to look up the concept
@@ -151,8 +143,6 @@ sub build_bmi_measurement_type_concept_id {
 }
 
 =item bmi_unit_concept_id
-
-=item build_bmi_unit_concept_id
 
 The C<unit_concept_id> value to be used in newly-created BMI records.
 
@@ -173,8 +163,6 @@ sub build_bmi_unit_concept_id {
 
 =item bmi_unit_source_value
 
-=item build_bmi_unit_source_value
-
 The C<unit_source_value> value to be used in newly-created BMI records.
 
 If no value is provided, the default is C<kg/m2>.
@@ -190,8 +178,6 @@ sub build_bmi_unit_source_value {
 }
 
 =item meas_match_limit_sec
-
-=item build_meas_match_limit_sec
 
 The maximum time, in seconds, between a height and weight measurement
 that may be paired to compute a BMI.  A weight will always be paired
@@ -212,8 +198,6 @@ sub build_meas_match_limit_sec {
 
 =item input_measurement_table
 
-=item build_input_measurement_table
-
 The name of the table in the source backend from which to read height
 and weight measurements.  Defaults to C<measurement>.
 
@@ -229,8 +213,6 @@ sub build_input_measurement_table {
 
 =item output_measurement_table
 
-=item build_output_measurement_table
-
 The name of the table in the sink backend to which BMI measurements
 are written.  Defaults to C<measurement>.
 
@@ -245,8 +227,6 @@ sub build_output_measurement_table {
 }
 
 =item output_chunk_size
-
-=item build_output_chunk_size
 
 It is often more efficient to write BMI records to
 L</output_measurement_table> in groups rather than individually, as
@@ -270,8 +250,6 @@ sub build_output_chunk_size {
 
 =item sql_flavor
 
-=item build_sql_flavor
-
 Provides a hint about the complexity of SQL statement the source
 backend can handle.  A value of C<limited> indicates that the backend
 has limited range, as seen with C<DBD::CSV>, and queries should avoid
@@ -291,8 +269,6 @@ has 'sql_flavor' =>
 sub build_sql_flavor { 'limited' }
 
 =item person_finder_sql
-
-=item build_person_finder_sql
 
 A string of SQL to be used to select the C<person_id>s for whom BMIs
 should be computed.
@@ -355,8 +331,6 @@ sub build_person_finder_sql {
 
 =item person_chunk_size
 
-=item build_person_chunk_size
-
 The number of C<person_id>s to retrieve at a time from the source
 backend in L<PEDSnet::Derivation::BMI/generate_bmis>.  
 
@@ -373,8 +347,6 @@ sub build_person_chunk_size {
 }
 
 =item clone_bmi_measurements
-
-=item build_clone_bmi_measurements
 
 When BMI records are constructed, a number of fields are set directly,
 such as the value itself and the metadata indicating that it's a
@@ -403,8 +375,6 @@ sub build_clone_bmi_measurements {
 }
 
 =item clone_attributes_except
-
-=item build_clone_attributes_except
 
 If L</clone_bmi_measurements> is true, then the value of
 L</clone_bmi_attributes_except> is taken as a reference to an array of
