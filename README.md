@@ -1,6 +1,6 @@
 ## PEDSnet::Derivation::BMI
 
-The [PEDSnet::Derivation::BMI](https://metacpan.org/pod/PEDSnet::Derivation::BMI)
+The [PEDSnet::Derivation::BMI](https://metacpan.org/pod/PEDSnet::Derivation::BMI) module
 computes body mass index (BMI) measurements for children with data in the PEDSnet CDM.
 
 `PEDSnet::Derivation::BMI` is implemented as a [Perl5](http://www.perl.org)
@@ -19,7 +19,7 @@ For more information on what's in the box, see the [SYNOPSIS](SYNOPSIS.md) and t
 
 ### Installing PEDSnet::Derivation::BMI
 
-Fundamentally, `PEDSnet::Derivation:BMI` is installed like any other Perl module.  In most cases, you won't even install it directly; your package manager will automatically install it as a dependency of the derivation package you're really after.  If you're not already familiar with Perl module management, you may find one of these options useful.
+Fundamentally, `PEDSnet::Derivation:BMI` is installed like any other Perl module.  If you're not already familiar with Perl module management, you may find one of these options useful.
 
 #### Existing Perl5 Installation
 
