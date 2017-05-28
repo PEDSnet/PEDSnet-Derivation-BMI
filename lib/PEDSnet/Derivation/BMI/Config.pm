@@ -360,7 +360,7 @@ have added in your measurement table) are not.
 Defaults to false as a conservative approach, but unless you've made
 major modifications to measurement record structure, it's generally a
 good idea to set this to a true value, and use
-L</clone_bmi_attributes_except> to weed out any attributes you don't
+L</clone_attributes_except> to weed out any attributes you don't
 want to carry over.
 
 =cut
@@ -376,7 +376,7 @@ sub build_clone_bmi_measurements {
 =item clone_attributes_except
 
 If L</clone_bmi_measurements> is true, then the value of
-L</clone_bmi_attributes_except> is taken as a reference to an array of
+L</clone_attributes_except> is taken as a reference to an array of
 attribute names that should NOT be carried over from the parent weight
 record. 
 
