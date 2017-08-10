@@ -28,6 +28,8 @@ The following attributes are defined for the BMI computation process:
 
 =head2 Attributes
 
+=for Pod::Coverage build_.+
+
 =over 4
 
 =cut
@@ -46,8 +48,6 @@ sub _build_config_param {
   my @cids = $self->ask_rdb('SELECT concept_id FROM concept WHERE ' . $sql_where);
   return $cids[0]->{concept_id};
 }
-
-=for Pod::Coverage build_.+
 
 =item ht_measurement_concept_ids
 
