@@ -39,6 +39,7 @@ my %module_build_args = (
     "warnings" => 0
   },
   "script_files" => [
+    "script/bmi_sample.conf",
     "script/derive_bmi"
   ],
   "test_requires" => {
