@@ -27,11 +27,12 @@ If you have a recent version (5.24 or later is required) of Perl installed, you 
 
 ```
 # Interactive package installer distributed with Perl
-cpan PEDSnet::Derivation::BMI
+# cpan PEDSnet::Derivation::BMI
 # cpanminus - released version
-cpanm PEDSnet::Derivation::BMI
+# cpanm PEDSnet::Derivation::BMI
 # cpanminus - current development version
-cpanm https://github.com/PEDSnet/PEDSnet-Derivation-BMI
+cpanm git://github.com/PEDSnet/PEDSnet-Derivation
+cpanm git://github.com/PEDSnet/PEDSnet-Derivation-BMI
 ```
 
 #### New Perl5 Installation
@@ -48,7 +49,8 @@ perlbrew install-cpanm
 # Install PEDSnet::Derivation::BMI
 cpanm PEDSnet::Derivation::BMI
 # OR, if you want the bleeding edge
-cpanm https://github.com/PEDSnet/PEDSnet-Derivation-BMI
+cpanm git://github.com/PEDSnet/PEDSnet-Derivation
+cpanm git://github.com/PEDSnet/PEDSnet-Derivation-BMI
 ```
 
 If building from source isn't an option for you, visit http://www.perl.org/get.html for binary versions, each of which comes with a package manager that should let you add on the released version of `PEDSnet::Derivation`.
