@@ -36,7 +36,7 @@ similar mechanism.  If not, the application code will need to do so.
     values of height in inches and cm overlap significantly, no attempt is
     made to detect a value in inches.
 
-- create\_time\_series( $self, $meas\_list )
+- create\_datetime\_series( $self, $meas\_list )
 
     Given a list of measurement records referred to by _$meas\_list_,
     return a reference to a list of hash references, each with two
@@ -46,7 +46,7 @@ similar mechanism.  If not, the application code will need to do so.
 
         The associated value is a measurement record from _$meas\_list_.  A
         new element, with key `measurement_dt` is added, whose value is the
-        [DateTime](https://metacpan.org/pod/DateTime) that results from parsing `measurement_time`, or if
+        [DateTime](https://metacpan.org/pod/DateTime) that results from parsing `measurement_datetime`, or if
         that's undefined, [measurement\_date](https://metacpan.org/pod/measurement_date).
 
     - rdsec
@@ -60,7 +60,7 @@ similar mechanism.  If not, the application code will need to do so.
 
     Find the element of _$time\_series_ closest in time to _$target\_meas_
     (either before or after).  If _$target\_meas_ doesn't have a
-    `measurement_dt` element, one is added as described above (cf. ["create\_time\_series"](#create_time_series)).
+    `measurement_dt` element, one is added as described above (cf. ["create\_datetime\_series"](#create_datetime_series)).
 
     If no element of _$time\_series_ is within _limit\_sec_ of
     _$target\_meas_, returns nothing.  Otherwise, returns the

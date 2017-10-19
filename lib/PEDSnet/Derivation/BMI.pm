@@ -84,7 +84,7 @@ sub compute_bmi {
   $wt_kg / ($ht_cm / 100) ** 2;
 }
 
-=item create_time_series( $self, $meas_list )
+=item create_datetime_series( $self, $meas_list )
 
 Given a list of measurement records referred to by I<$meas_list>,
 return a reference to a list of hash references, each with two
@@ -96,7 +96,7 @@ elements with these keys:
 
 The associated value is a measurement record from I<$meas_list>.  A
 new element, with key C<measurement_dt> is added, whose value is the
-L<DateTime> that results from parsing C<measurement_time>, or if
+L<DateTime> that results from parsing C<measurement_datetime>, or if
 that's undefined, L<measurement_date>.
 
 =item rdsec
@@ -110,12 +110,12 @@ The returned list is sorted in ascending datetime order.
 
 =cut
 
-sub create_time_series {
+sub create_datetime_series {
   my( $self, $meas_list ) = @_;
   my @series;
 
   foreach my $m ( $meas_list->@*) {
-    $m->{measurement_dt} //= parse_date($m->{measurement_time} // $m->{measurement_date})
+    $m->{measurement_dt} //= parse_date($m->{measurement_datetime} // $m->{measurement_date})
       unless exists $m->{measurement_dt};
 
     push @series, { rdsec => $m->{measurement_dt}->utc_rd_as_seconds,
@@ -132,7 +132,7 @@ sub create_time_series {
 
 Find the element of I<$time_series> closest in time to I<$target_meas>
 (either before or after).  If I<$target_meas> doesn't have a
-C<measurement_dt> element, one is added as described above (cf. L</create_time_series>).
+C<measurement_dt> element, one is added as described above (cf. L</create_datetime_series>).
 
 If no element of I<$time_series> is within I<limit_sec> of
 I<$target_meas>, returns nothing.  Otherwise, returns the
@@ -147,7 +147,7 @@ either, then 0 is used as a last resort.
 sub find_closest_meas {
   my( $self, $ts, $targ, $limit ) = @_;
 
-  $targ->{measurement_dt} //= parse_date($targ->{measurement_time} // $targ->{measurement_date})
+  $targ->{measurement_dt} //= parse_date($targ->{measurement_datetime} // $targ->{measurement_date})
     unless exists $targ->{measurement_dt};
 
   my $target_rdsec = $targ->{measurement_dt}->utc_rd_as_seconds;
@@ -168,8 +168,8 @@ sub find_closest_meas {
   return unless $current_cand;
   $self->remark({ level => 3,
 		  message => 'Matched measurement at ' .
-		  $current_cand->{meas}->{measurement_time} .
-		  ' to target at ' . $targ->{measurement_time} });
+		  $current_cand->{meas}->{measurement_datetime} .
+		  ' to target at ' . $targ->{measurement_datetime} });
   return $current_cand->{meas};
 }
 
@@ -211,7 +211,7 @@ sub bmi_meas_for_person {
   $self->remark('Computing BMIs for person ' .
 		$wts[0]->{person_id}) if $verbose >= 2;
   
-  my $ht_ts = $self->create_time_series( \@hts );
+  my $ht_ts = $self->create_datetime_series( \@hts );
   my(@bmis, @clone_except);
 
 
@@ -226,7 +226,7 @@ sub bmi_meas_for_person {
 				     $wt->{value_as_number});
 
     $self->remark( sprintf 'Computed BMI %4.2f for weight %d on %s',
-		   $bmi_val, $wt->{measurement_id}, $wt->{measurement_time})
+		   $bmi_val, $wt->{measurement_id}, $wt->{measurement_datetime})
       if $verbose >= 3;
     
     if ($clone) { 
@@ -248,7 +248,7 @@ sub bmi_meas_for_person {
 	 person_id => $wt->{person_id},
 	 measurement_concept_id => $bmi_cid,
 	 measurement_date => $wt->{measurement_date},
-	 measurement_time => $wt->{measurement_time},
+	 measurement_datetime => $wt->{measurement_datetime},
 	 measurement_type_concept_id => $bmi_type_cid,
 	 value_as_number => $bmi_val,
 	 unit_concept_id => $bmi_unit_cid,
@@ -259,7 +259,7 @@ sub bmi_meas_for_person {
 	};
       # Optional keys - should be there but may be skipped if input
       # was not read from measurement table
-      foreach my $k (qw/ measurement_result_date measurement_result_time
+      foreach my $k (qw/ measurement_result_date measurement_result_datetime
                          provider_id visit_occurrence_id site /) {
         $bmi_rec->{$k} = $wt->{$k} if exists $wt->{$k};
       }
