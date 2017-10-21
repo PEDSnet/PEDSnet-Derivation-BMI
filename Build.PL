@@ -18,7 +18,7 @@ my %module_build_args = (
     "Charles Bailey <cbail\@cpan.org>"
   ],
   "dist_name" => "PEDSnet-Derivation-BMI",
-  "dist_version" => "0.03",
+  "dist_version" => "0.04",
   "license" => "open_source",
   "module_name" => "PEDSnet::Derivation::BMI",
   "recursive_test_files" => 1,
