@@ -36,7 +36,7 @@ similar mechanism.  If not, the application code will need to do so.
     values of height in inches and cm overlap significantly, no attempt is
     made to detect a value in inches.
 
-- create\_datetime\_series( $self, $meas\_list )
+- create\_time\_series( $self, $meas\_list )
 
     Given a list of measurement records referred to by _$meas\_list_,
     return a reference to a list of hash references, each with two
@@ -60,7 +60,8 @@ similar mechanism.  If not, the application code will need to do so.
 
     Find the element of _$time\_series_ closest in time to _$target\_meas_
     (either before or after).  If _$target\_meas_ doesn't have a
-    `measurement_dt` element, one is added as described above (cf. ["create\_datetime\_series"](#create_datetime_series)).
+    `measurement_dt` element, one is added as described above
+    (cf. ["create\_time\_series"](#create_time_series)).
 
     If no element of _$time\_series_ is within _limit\_sec_ of
     _$target\_meas_, returns nothing.  Otherwise, returns the

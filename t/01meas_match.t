@@ -34,7 +34,7 @@ my $wt = { measurement_datetime => '2015-09-05T14:42:10',
 	   measurement_concept_id => 3013762,
 	   value_as_number => 25 };
 
-my $ts = $handle->create_datetime_series( $hts );
+my $ts = $handle->create_time_series( $hts );
 eq_or_diff( [ map { $_->{meas} } @$ts ],
 	    [ sort { $a->{measurement_datetime} cmp $b->{measurement_datetime} } @$hts ],
 	    'Time series order');

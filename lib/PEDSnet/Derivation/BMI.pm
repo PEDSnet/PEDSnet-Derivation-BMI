@@ -84,7 +84,7 @@ sub compute_bmi {
   $wt_kg / ($ht_cm / 100) ** 2;
 }
 
-=item create_datetime_series( $self, $meas_list )
+=item create_time_series( $self, $meas_list )
 
 Given a list of measurement records referred to by I<$meas_list>,
 return a reference to a list of hash references, each with two
@@ -110,12 +110,13 @@ The returned list is sorted in ascending datetime order.
 
 =cut
 
-sub create_datetime_series {
+sub create_time_series {
   my( $self, $meas_list ) = @_;
   my @series;
 
   foreach my $m ( $meas_list->@*) {
-    $m->{measurement_dt} //= parse_date($m->{measurement_datetime} // $m->{measurement_date})
+    $m->{measurement_dt} //= parse_date($m->{measurement_datetime} //
+					$m->{measurement_date})
       unless exists $m->{measurement_dt};
 
     push @series, { rdsec => $m->{measurement_dt}->utc_rd_as_seconds,
@@ -132,7 +133,8 @@ sub create_datetime_series {
 
 Find the element of I<$time_series> closest in time to I<$target_meas>
 (either before or after).  If I<$target_meas> doesn't have a
-C<measurement_dt> element, one is added as described above (cf. L</create_datetime_series>).
+C<measurement_dt> element, one is added as described above
+(cf. L</create_time_series>).
 
 If no element of I<$time_series> is within I<limit_sec> of
 I<$target_meas>, returns nothing.  Otherwise, returns the
@@ -147,7 +149,8 @@ either, then 0 is used as a last resort.
 sub find_closest_meas {
   my( $self, $ts, $targ, $limit ) = @_;
 
-  $targ->{measurement_dt} //= parse_date($targ->{measurement_datetime} // $targ->{measurement_date})
+  $targ->{measurement_dt} //= parse_date($targ->{measurement_datetime} //
+					 $targ->{measurement_date})
     unless exists $targ->{measurement_dt};
 
   my $target_rdsec = $targ->{measurement_dt}->utc_rd_as_seconds;
@@ -211,7 +214,7 @@ sub bmi_meas_for_person {
   $self->remark('Computing BMIs for person ' .
 		$wts[0]->{person_id}) if $verbose >= 2;
   
-  my $ht_ts = $self->create_datetime_series( \@hts );
+  my $ht_ts = $self->create_time_series( \@hts );
   my(@bmis, @clone_except);
 
 
