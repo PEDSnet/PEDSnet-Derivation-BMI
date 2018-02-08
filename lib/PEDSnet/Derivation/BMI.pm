@@ -6,7 +6,7 @@ use warnings;
 
 package PEDSnet::Derivation::BMI;
 
-our($VERSION) = '0.04';
+our($VERSION) = '0.15';
 
 use Moo 2;
 

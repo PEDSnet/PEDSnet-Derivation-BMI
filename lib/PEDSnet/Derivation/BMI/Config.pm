@@ -7,7 +7,7 @@ use warnings;
 
 package PEDSnet::Derivation::BMI::Config;
 
-our($VERSION) = '0.02';
+our($VERSION) = '0.03';
 
 =head1 NAME
 
@@ -394,7 +394,9 @@ sub build_clone_attributes_except {
     [ qw(measurement_id measurement_concept_id measurement_type_concept_id
          value_as_number value_as_concept_id unit_concept_id range_low range_high
          measurement_source_value measurement_source_concept_id unit_source_value
-         value_source_value siteid) ];
+         value_source_value
+         siteid measurement_concept_name measurement_type_concept_name
+         value_as_concept_name) ];
 }
 
 
